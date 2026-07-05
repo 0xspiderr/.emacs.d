@@ -91,7 +91,7 @@
   (setq evil-want-keybinding nil)
   ;; set relative line numbers
   (evil-mode 1)
-)  
+)
 (require 'evil-vars)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -169,8 +169,15 @@
  "o o" '(fn/open-org-dir :which-key "org")
 
  "w"   '(:ignore t :which-key "windows")
- "w k" '(delete-window :which-key "delete window")
+ "w k" '(delete-window :which-key "delete window") ;; duplicate, dependes on how i have my hands on my keyboard :^)
+ "w c" '(delete-window :which-key "delete window")
  "w h" '(dashboard-open :which-key "go to dashboard")
+
+ "c"   '(:ignore t :which-key "code")
+ "c e" '(quickrun :which-key "execute code in current buffer")
+ "c a" '(quickrun-with-arg :which-key "execute code with args")
+ "c s" '(quickrun-shell :which-key "execute code in shell")
+ "c f" '(eglot-format :which-key "format code")
  )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -252,6 +259,48 @@
   (evil-define-key 'normal dired-mode-map (kbd "h")       'dired-up-directory)) 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; lsp config
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; gdscript
+(use-package gdscript-mode)
+
+(use-package eglot
+  :ensure nil ;; built in
+  :hook ((python-mode . eglot-ensure)
+		 (c-mode . eglot-ensure)
+		 (c++-mode . eglot-ensure)
+		 (emacs-lisp-mode . eglot-ensure)
+		 (LaTeX-mode . eglot-ensure)
+		 (gdscript-mode . eglot-ensure)))
+
+;; for auto completion
+(use-package corfu
+  :ensure t
+  :custom
+  (corfu-auto t)
+  (corfu-auto-prefix 2) ;; trigger after 2 chars typed
+  (corfu-auto-delay 0.1)
+  (corfu-quit-no-match 'separator)
+  (corfu-popupinfo-delay 0)
+  :init
+  (global-corfu-mode) ;; turn on for every file
+  (corfu-popupinfo-mode) ;; show docs alongside the completion
+)
+
+;; parenthesis config
+(show-paren-mode 1)
+(electric-pair-mode 1) ;; auto close parenthesis
+(setq show-paren-delay 0.0)
+(setq electric-pair-pairs
+	  '((?\( . ?\))
+		(?\[ . ?\])
+		(?\{ . ?\})))
+
+;; quickrun
+(use-package quickrun
+  :ensure t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Custom set variables config(auto generated)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (custom-set-variables
@@ -259,7 +308,8 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages '(vertico which-key general evil ivy)))
+ '(package-selected-packages
+   '(quickrun gdscript-mode corfu eglot company-box company lsp-mode flycheck vertico which-key general evil ivy)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
