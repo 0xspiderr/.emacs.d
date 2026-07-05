@@ -19,7 +19,12 @@
 (setq use-package-always-ensure t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; ui elements confiG
+;; theme config
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(load-theme 'modus-vivendi t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ui elements config
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (menu-bar-mode -1)
 (tool-bar-mode -1)
@@ -27,8 +32,31 @@
 ;; (set-fringe-mode 0)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; dashboard(custom splashscreen)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(use-package dashboard
+  :ensure t
+  :custom
+  (dashboard-banner-logo-title nil)
+  (dashboard-startup-banner "~/.emacs.d/img/images.jpeg")
+  (dashboard-center-content t)
+  (dashboard-vertically-center-content t)
+  (dashboard-items '((recents . 5)))
+  (dashboard-navigation-cycle t)
+  (dasboard-jump-to-recents)
+  :config
+  (dashboard-setup-startup-hook)
+  ;; for putting the cursor at the start of the first recent file
+ (add-hook 'dashboard-after-initialize-hook
+			(lambda()
+			(dashboard-jump-to-recents)))
+)
+(require 'dashboard-widgets)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; line and columns config
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(setq-default display-line-numbers-type 'relative)
 (global-display-line-numbers-mode 1)
 (column-number-mode)
 (hl-line-mode)
@@ -37,14 +65,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; fonts config
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; -16 at the end -- px size
-(set-face-attribute 'default nil :font "PxPlus IBM VGA 8x16-16")
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; theme config
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(load-theme 'modus-vivendi t)
-
+(set-face-attribute 'default nil :family "PxPlus IBM VGA 8x16" :height 140)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; vertico config
@@ -68,13 +89,10 @@
   :ensure t
   :init
   (setq evil-want-keybinding nil)
+  ;; set relative line numbers
   (evil-mode 1)
 )  
 (require 'evil-vars)
-
-;; set relative line numbers
-(setq display-line-numbers-type 'relative)
-(global-display-line-numbers-mode +1)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; general and which-key config
@@ -102,7 +120,7 @@
   (find-file (completing-read "recent files:" recentf-list)))
 
 ;; keybind custom methods
-(setq init-file "~/.config/emacs/init.el") ;; for finding it
+(setq init-file "~/.emacs.d/init.el") ;; for finding it
 (defun fn/edit-config-file()
   "opens the init file"
   (interactive)
@@ -115,6 +133,16 @@
   (interactive)
   (find-file org-dir)
   )
+
+(defun fn/latex-toggle-pdf()
+  "toggle the side by side pdf preview window"
+  (interactive)
+  (let ((pdf-buffer (get-buffer (concat (file-name-base (buffer-file-name)) ".pdf"))))
+	(if (and pdf-buffer (get-buffer-window pdf-buffer))
+		;; if pdf open, close it
+		(delete-window (get-buffer-window pdf-buffer))
+	  ;; else open it
+	  (TeX-view))))
 
 ;; doom emacs-like keybindings
 (general-define-key
@@ -142,24 +170,8 @@
 
  "w"   '(:ignore t :which-key "windows")
  "w k" '(delete-window :which-key "delete window")
+ "w h" '(dashboard-open :which-key "go to dashboard")
  )
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; dashboard(custom splashscreen)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(use-package dashboard
-  :ensure t
-  :config
-  (dashboard-setup-startup-hook)
-  :custom
-  (dashboard-banner-logo-title nil)
-  (dashboard-startup-banner "~/.config/emacs/img/images.jpeg")
-  (dashboard-center-content t)
-  (dashboard-items '((recents . 5)))
-  (dashboard-navigation-cycle t)
-)
-(require 'dashboard-widgets)
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; org mode config
@@ -181,17 +193,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; latex config
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun fn/latex-toggle-pdf()
-  "toggle the side by side pdf preview window"
-  (interactive)
-  (let ((pdf-buffer (get-buffer (concat (file-name-base (buffer-file-name)) ".pdf"))))
-	(if (and pdf-buffer (get-buffer-window pdf-buffer))
-		;; if pdf open, close it
-		(delete-window (get-buffer-window pdf-buffer))
-	  ;; else open it
-	  (TeX-view))))
-
-(with-eval-after-load 'tex
+(with-eval-after-load 'latex
   (general-define-key
    :states '(normal visual insert emacs)
    :keymaps 'LaTeX-mode-map
@@ -238,7 +240,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; dired config
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(with-eval-after-load 'dire
+(with-eval-after-load 'dired
   ;; open file with RET key
   (evil-define-key 'normal dired-mode-map (kbd "RET") 'dired-find-file)
   (evil-define-key 'normal dired-mode-map (kbd "<return>") 'dired-find-file)
