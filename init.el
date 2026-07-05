@@ -35,15 +35,16 @@
 (setq-default tab-width 4)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; fonts config
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; -16 at the end -- px size
+(set-face-attribute 'default nil :font "PxPlus IBM VGA 8x16-16")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; theme config
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (load-theme 'modus-vivendi t)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; fonts config
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; -16 at the end -- px size
-(set-face-attribute 'default nil :font "Px437 IBM VGA 8x16-16")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; vertico config
@@ -88,6 +89,33 @@
   :init (which-key-mode))
 (setq which-key-idle-delay 1.0)
 
+(use-package recentf
+  :ensure nil ;; built in emacs
+  :init
+  (recentf-mode 1)
+  :custom
+  (recentf-max-saved-items 20))
+
+(defun fn/find-recent-file()
+  "find recently opened files using vertico"
+  (interactive)
+  (find-file (completing-read "recent files:" recentf-list)))
+
+;; keybind custom methods
+(setq init-file "~/.config/emacs/init.el") ;; for finding it
+(defun fn/edit-config-file()
+  "opens the init file"
+  (interactive)
+  (find-file init-file)
+  )
+
+(setq org-dir "~/org") ;; for finding org dir
+(defun fn/open-org-dir()
+  "opens the org directory"
+  (interactive)
+  (find-file org-dir)
+  )
+
 ;; doom emacs-like keybindings
 (general-define-key
  :states '(normal visual insert emacs)
@@ -98,9 +126,10 @@
  "."   '(find-file :which-key "find file")
  
  "f"   '(:ignore t :which-key "files")
- "f c" '(edit-config-file :which-key "edit emacs config file")
+ "f c" '(fn/edit-config-file :which-key "edit emacs config file")
  "f f" '(find-file :which-key "find file")
  "f s" '(save-buffer :which-key "save file")
+ "f r" '(fn/find-recent-file :which-key "recent files")
  
  "b"   '(:ignore t :which-key "buffers")
  "b ," '(previous-buffer :which-key "previous buffer")
@@ -109,22 +138,12 @@
 
  "o"   '(:ignore t :which-key "open")
  "o s" '(eshell :which-key "eshell") ;; might change from eshell
- "o o" '(open-org-dir :which-key "org")
+ "o o" '(fn/open-org-dir :which-key "org")
+
+ "w"   '(:ignore t :which-key "windows")
+ "w k" '(delete-window :which-key "delete window")
  )
 
-(setq init-file "~/.config/emacs/init.el") ;; for finding it
-(defun edit-config-file()
-  "opens the init file"
-  (interactive)
-  (find-file init-file)
-  )
-
-(setq org-dir "~/org") ;; for finding org dir
-(defun open-org-dir()
-  "opens the org directory"
-  (interactive)
-  (find-file org-dir)
-  )
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; dashboard(custom splashscreen)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -162,19 +181,64 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; latex config
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun fn/latex-toggle-pdf()
+  "toggle the side by side pdf preview window"
+  (interactive)
+  (let ((pdf-buffer (get-buffer (concat (file-name-base (buffer-file-name)) ".pdf"))))
+	(if (and pdf-buffer (get-buffer-window pdf-buffer))
+		;; if pdf open, close it
+		(delete-window (get-buffer-window pdf-buffer))
+	  ;; else open it
+	  (TeX-view))))
+
+(with-eval-after-load 'tex
+  (general-define-key
+   :states '(normal visual insert emacs)
+   :keymaps 'LaTeX-mode-map
+   :prefix "SPC"
+   :non-normal-prefix "C-SPC"
+   "l"   '(:ignore t :which-key "latex")
+   "l v" '(fn/latex-toggle-pdf :which-key "view LaTeX pdf")))
+
 (use-package auctex
   :ensure t
-  :defer t
   :config
   (setq TeX-PDF-mode t) ;; default to export pdfs
   (setq TeX-auto-save t)
   (setq TeX-parse-self t)
-  (setq-default TeX-master nil))
+  (setq-default TeX-master t))
+
+(defun fn/latex-compile()
+  "compile the latex doc in the background"
+  (when (eq major-mode 'LaTeX-mode)
+	(let ((TeX-process-asynchronous t)
+		  (TeX-save-query nil))
+	  (TeX-command-sequence t t))))
+
+(add-hook 'after-save-hook #'fn/latex-compile)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; pdf-tools config
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(use-package pdf-tools
+  :ensure t
+  :init
+  (pdf-loader-install)
+  :config
+  ;; disable global line numbers on pdf window
+  (add-hook 'pdf-view-mode-hook (lambda() (display-line-numbers-mode -1)))
+  ;; auctex opens pdf with pdf-tools instead of system pdf reader
+  (with-eval-after-load 'tex
+	(setq TeX-view-program-selection '((output-pdf "PDF Tools"))
+		  TeX-view-program-list '(("PDF Tools" "TeX-pdf-tools-sync-view")))
+	)
+
+  ;; auto-refresh pdf after compile
+  (add-hook 'TeX-after-compilation-finished-functions #'TeX-revert-document-buffer))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; dired config
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(with-eval-after-load 'dired
+(with-eval-after-load 'dire
   ;; open file with RET key
   (evil-define-key 'normal dired-mode-map (kbd "RET") 'dired-find-file)
   (evil-define-key 'normal dired-mode-map (kbd "<return>") 'dired-find-file)
