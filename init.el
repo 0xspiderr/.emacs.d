@@ -127,6 +127,12 @@
   (find-file init-file)
   )
 
+(setq workspace-file "~/workspace/")
+(defun fn/open-workspace()
+  "opens the workspace directory"
+  (interactive)
+  (find-file workspace-file))
+
 (setq org-dir "~/org") ;; for finding org dir
 (defun fn/open-org-dir()
   "opens the org directory"
@@ -158,7 +164,7 @@
  "f f" '(find-file :which-key "find file")
  "f s" '(save-buffer :which-key "save file")
  "f r" '(fn/find-recent-file :which-key "recent files")
- 
+ "f w" '(fn/open-workspace :which-key "workspace directory")
  "b"   '(:ignore t :which-key "buffers")
  "b ," '(previous-buffer :which-key "previous buffer")
  "b ." '(next-buffer :which-key "next buffer")
