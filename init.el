@@ -65,7 +65,21 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; fonts config
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(set-face-attribute 'default nil :family "PxPlus IBM VGA 8x16" :height 140)
+(defvar ligatures-JetBrainsMono
+  '("--" "---" "==" "===" "!=" "!==" "=!=" "=:=" "=/=" "<=" ">=" "&&" "&&&" "&=" "++" "+++"
+   "***" ";;" "!!" "??" "?:" "?." "?=" "<:" ":<" ":>" ">:" "<>" "<<<" ">>>" "<<" ">>" "||" "-|"
+   "_|_" "|-" "||-" "|=" "||=" "##" "###" "####" "#{" "#[" "]#" "#(" "#?" "#_" "#_(" "#:"
+   "#!" "#=" "^=" "<$>" "<$" "$>" "<+>" "<+ +>" "<*>" "<* *>" "</" "</>" "/>" "<!--"
+   "<#--" "-->" "->" "->>" "<<-" "<-" "<=<" "=<<" "<<=" "<==" "<=>" "<==>" "==>" "=>"
+   "=>>" ">=>" ">>=" ">>-" ">-" ">--" "-<" "-<<" ">->" "<-<" "<-|" "<=|" "|=>" "|->" "<-"
+   "<~~" "<~" "<~>" "~~" "~~>" "~>" "~-" "-~" "~@" "[||]" "|]" "[|" "|}" "{|" "[<" ">]"
+   "|>" "<|" "||>" "<||" "|||>" "|||>" "<|>" "..." ".." ".=" ".-" "..<" ".?" "::" ":::"
+   ":=" "::=" ":?" ":?>" "//" "///" "/*" "*/" "/=" "//=" "/==" "@_" "__")) ;; i like ligatures :^)
+(set-face-attribute 'default nil :family "JetBrains Mono" :height 140)
+(use-package ligature
+  :config
+  (ligature-set-ligatures 'prog-mode ligatures-JetBrainsMono)
+  (global-ligature-mode t))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; vertico config
@@ -214,6 +228,7 @@
    :non-normal-prefix "C-SPC"
    "l"   '(:ignore t :which-key "latex")
    "l v" '(fn/latex-toggle-pdf :which-key "view LaTeX pdf")))
+(setq font-latex-fontify-sectioning 'color)
 
 (use-package auctex
   :ensure t
@@ -230,6 +245,7 @@
 		  (TeX-save-query nil))
 	  (TeX-command-sequence t t))))
 
+(add-hook 'LaTeX-mode-hook prettify-symbols-mode 1)
 (add-hook 'after-save-hook #'fn/latex-compile)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; pdf-tools config
@@ -275,9 +291,12 @@
   :hook ((python-mode . eglot-ensure)
 		 (c-mode . eglot-ensure)
 		 (c++-mode . eglot-ensure)
-		 (emacs-lisp-mode . eglot-ensure)
 		 (LaTeX-mode . eglot-ensure)
-		 (gdscript-mode . eglot-ensure)))
+		 (gdscript-mode . eglot-ensure)
+		 ))
+(add-hook 'prog-mode-hook
+		  (lambda ()
+			(add-hook 'before-save-hook #'eglot-format-buffer nil 'local)))
 
 ;; for auto completion
 (use-package corfu
@@ -315,7 +334,7 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(quickrun gdscript-mode corfu eglot company-box company lsp-mode flycheck vertico which-key general evil ivy)))
+   '(ligature quickrun gdscript-mode corfu eglot company-box company lsp-mode flycheck vertico which-key general evil ivy)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
