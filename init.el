@@ -8,7 +8,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (require 'package)
 (setq package-archives '(("melpa" . "https://melpa.org/packages/")
-						 ("org" . "https://orgmode.org/elpa/")
 						 ("elpa" . "https://elpa.gnu.org/packages/"))
 )
 (package-initialize)
@@ -17,6 +16,7 @@
 
 (require 'use-package)
 (setq use-package-always-ensure t)
+(setq package-install-upgrade-built-in t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; theme config
@@ -91,11 +91,31 @@
   :init
   (vertico-mode))
 
-;; persit history over emacs restarts
-(use-package savehist
+(use-package orderless
   :ensure t
+  :custom
+  (completion-styles '(orderless))
+  (completion-category-defaults nil)
+  (completion-category-overrides '((file (styles basic partial-completion)))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; consult config
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(use-package consult
+  :ensure t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; marginalia config
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(use-package marginalia
+  :ensure t
+  :custom
+  (marginalia-max-relative-age 0)
+  (marginalia-align 'right)
   :init
-  (savehist-mode))
+  (marginalia-mode))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; evil config
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -184,6 +204,15 @@
  "b ." '(next-buffer :which-key "next buffer")
  "b k" '(kill-current-buffer :which-key "kill current buffer")
 
+ "o"   '(:ignore t :which-key "org")
+ "o i" '(org-roam-node-insert :which-key "org roam insert")
+ "o c" '(org-roam-capture :which-key "org roam capture")
+ "o f" '(org-roam-node-find :which-key "org roam find/create")
+ "o u" '(org-roam-ui-open :which-key "org roam ui open")
+ 
+ "s"   '(:ignore t :which-key "search")
+ "s f" '(consult-line :which-key "search matching")
+ 
  "o"   '(:ignore t :which-key "open")
  "o s" '(eshell :which-key "eshell") ;; might change from eshell
  "o o" '(fn/open-org-dir :which-key "org")
@@ -236,7 +265,7 @@
   (setq TeX-PDF-mode t) ;; default to export pdfs
   (setq TeX-auto-save t)
   (setq TeX-parse-self t)
-  (setq-default TeX-master t))
+  (setq-default TeX-master nil))
 
 (defun fn/latex-compile()
   "compile the latex doc in the background"
@@ -256,15 +285,16 @@
   (pdf-loader-install)
   :config
   ;; disable global line numbers on pdf window
-  (add-hook 'pdf-view-mode-hook (lambda() (display-line-numbers-mode -1)))
+  (add-hook 'pdf-view-mode-hook (lambda()
+								  (display-line-numbers-mode -1)
+								  (pdf-view-fit-page-to-window)))
   ;; auctex opens pdf with pdf-tools instead of system pdf reader
   (with-eval-after-load 'tex
 	(setq TeX-view-program-selection '((output-pdf "PDF Tools"))
 		  TeX-view-program-list '(("PDF Tools" "TeX-pdf-tools-sync-view")))
-	)
-
-  ;; auto-refresh pdf after compile
-  (add-hook 'TeX-after-compilation-finished-functions #'TeX-revert-document-buffer))
+	))
+;; auto-refresh pdf after compile
+(add-hook 'TeX-after-compilation-finished-functions #'TeX-revert-document-buffer)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; dired config
@@ -293,7 +323,9 @@
 		 (c++-mode . eglot-ensure)
 		 (LaTeX-mode . eglot-ensure)
 		 (gdscript-mode . eglot-ensure)
-		 ))
+		 (csharp-mode . eglot-ensure)
+		 )
+  )
 (add-hook 'prog-mode-hook
 		  (lambda ()
 			(add-hook 'before-save-hook #'eglot-format-buffer nil 'local)))
@@ -326,18 +358,28 @@
   :ensure t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Custom set variables config(auto generated)
+;; org-roam & org config
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   '(ligature quickrun gdscript-mode corfu eglot company-box company lsp-mode flycheck vertico which-key general evil ivy)))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
+(use-package org-roam
+  :ensure t)
+
+;; (make-directory "~/Documents/org-roam")
+(setq org-roam-directory (file-truename "~/Documents/org-roam"))
+(org-roam-db-autosync-mode)
+
+
+(use-package org-roam-ui
+  :after org-roam
+  :config
+  (
+   setq org-roam-ui-sync-theme t
+		org-roam-ui-follow t
+		org-roam-ui-update-on-save t
+		org-roam-ui-open-on-start t))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; custom set variables config(auto generated)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(setq custom-file "~/.emacs.d/custom.el")
+(load custom-file)
+
