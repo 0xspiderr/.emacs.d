@@ -3,12 +3,18 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (setq inhibit-startup-message t)
 
+(global-auto-revert-mode 1)
+(setq global-auto-revert-non-file-buffers t)
+(setq auto-revert-verbose nil)
+(setq make-backup-files nil)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; package manager config
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (require 'package)
 (setq package-archives '(("melpa" . "https://melpa.org/packages/")
-						 ("elpa" . "https://elpa.gnu.org/packages/"))
+						 ("elpa" . "https://elpa.gnu.org/packages/")
+						 ("melpa-stable" . "https://stable.melpa.org/packages/"))
 )
 (package-initialize)
 (unless package-archive-contents
@@ -316,6 +322,8 @@
 ;; gdscript
 (use-package gdscript-mode)
 
+(use-package markdown-mode
+  :ensure t)
 (use-package eglot
   :ensure nil ;; built in
   :hook ((python-mode . eglot-ensure)
@@ -324,12 +332,14 @@
 		 (LaTeX-mode . eglot-ensure)
 		 (gdscript-mode . eglot-ensure)
 		 (csharp-mode . eglot-ensure)
+		 (markdown-mode . eglot-ensure)
+		 (racket-mode . eglot-ensure)
+		 (go-mode . eglot-ensure)
 		 )
   )
 (add-hook 'prog-mode-hook
 		  (lambda ()
 			(add-hook 'before-save-hook #'eglot-format-buffer nil 'local)))
-
 ;; for auto completion
 (use-package corfu
   :ensure t
