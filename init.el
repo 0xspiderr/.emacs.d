@@ -22,7 +22,7 @@
 
 (require 'use-package)
 (setq use-package-always-ensure t)
-(setq package-install-upgrade-built-in t)
+;; (setq package-install-upgrade-built-in t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; theme config
@@ -320,8 +320,6 @@
 ;; lsp config
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; gdscript
-(use-package gdscript-mode)
-
 (use-package markdown-mode
   :ensure t)
 (use-package eglot
@@ -352,8 +350,9 @@
   :init
   (global-corfu-mode) ;; turn on for every file
   (corfu-popupinfo-mode) ;; show docs alongside the completion
-)
-
+  )
+(use-package eldoc-box)
+(add-hook 'eglot-managed-mode-hook #'eldoc-box-hover-mode t)
 ;; parenthesis config
 (show-paren-mode 1)
 (electric-pair-mode 1) ;; auto close parenthesis
